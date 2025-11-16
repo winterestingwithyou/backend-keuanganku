@@ -1,0 +1,7 @@
+# Better Auth Configuration
+# Base URL untuk aplikasi (gunakan URL Cloudflare Workers untuk production)
+BETTER_AUTH_URL=http://localhost:8787
+
+# Secret key untuk Better Auth (minimal 32 karakter, gunakan random string untuk production)
+# Generate dengan: openssl rand -base64 32
+BETTER_AUTH_SECRET=development-secret-minimum-32-characters-long-change-in-production
