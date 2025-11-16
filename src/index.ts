@@ -3,6 +3,14 @@ import { cors } from 'hono/cors'
 import { auth } from './lib/better-auth'
 import { authMiddleware, requireAuth } from './lib/better-auth/middleware'
 
+// Import routes
+import walletRoutes from './routes/wallet'
+import transactionRoutes from './routes/transaction'
+import transferRoutes from './routes/transfer'
+import categoryRoutes from './routes/categories'
+import dashboardRoutes from './routes/dashboard'
+import statisticsRoutes from './routes/statistics'
+
 const app = new Hono<{ Bindings: CloudflareBindings }>()
 
 // CORS middleware
@@ -30,10 +38,20 @@ app.get('/', (c) => {
     message: 'Keuanganku API',
     version: '1.0.0',
     endpoints: {
-      auth: '/api/auth/*',
-      protected: '/api/protected'
+      auth: '/api/auth/**',
+      wallet: '/api/wallet',
+      transaction: '/api/transaction',
+      transfer: '/api/transfer',
+      categories: '/api/categories',
+      dashboard: '/api/dashboard',
+      statistics: '/api/statistics/**'
     }
   })
+})
+
+// Health check
+app.get('/health', (c) => {
+  return c.json({ status: 'ok', timestamp: new Date().toISOString() })
 })
 
 // Protected routes example
@@ -49,9 +67,12 @@ app.get('/api/protected', requireAuth, async (c) => {
   })
 })
 
-// Health check
-app.get('/health', (c) => {
-  return c.json({ status: 'ok', timestamp: new Date().toISOString() })
-})
+// Mount API routes
+app.route('/api/wallet', walletRoutes)
+app.route('/api/transaction', transactionRoutes)
+app.route('/api/transfer', transferRoutes)
+app.route('/api/categories', categoryRoutes)
+app.route('/api/dashboard', dashboardRoutes)
+app.route('/api/statistics', statisticsRoutes)
 
 export default app

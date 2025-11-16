@@ -8,10 +8,12 @@
     "better-auth-gen-schema": "pnpm dlx @better-auth/cli@latest generate --config ./better-auth.config.ts"
   },
   "dependencies": {
+    "@hono/zod-validator": "^0.7.4",
     "better-auth": "^1.3.34",
     "dotenv": "^17.2.3",
     "drizzle-orm": "^0.44.7",
-    "hono": "^4.10.6"
+    "hono": "^4.10.6",
+    "zod": "^4.1.12"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",

@@ -1,5 +1,6 @@
 import { user } from "./auth-schema";
 import { sqliteTable, text, integer, real, index } from "drizzle-orm/sqlite-core";
+import { relations } from "drizzle-orm";
 
 // Generate UUID v4
 const generateId = () => crypto.randomUUID();
@@ -127,5 +128,42 @@ export const transfer = sqliteTable('transfer', {
   index('idx_transfer_to_wallet').on(table.toWalletId),
   index('idx_transfer_date').on(table.userId, table.transferDate),
 ]);
+
+// ============================================
+// RELATIONS
+// ============================================
+export const walletRelations = relations(wallet, ({ many }) => ({
+  transactions: many(transaction),
+  transfersFrom: many(transfer, { relationName: 'fromWallet' }),
+  transfersTo: many(transfer, { relationName: 'toWallet' }),
+}));
+
+export const categoryRelations = relations(category, ({ many }) => ({
+  transactions: many(transaction),
+}));
+
+export const transactionRelations = relations(transaction, ({ one }) => ({
+  wallet: one(wallet, {
+    fields: [transaction.walletId],
+    references: [wallet.id],
+  }),
+  category: one(category, {
+    fields: [transaction.categoryId],
+    references: [category.id],
+  }),
+}));
+
+export const transferRelations = relations(transfer, ({ one }) => ({
+  fromWallet: one(wallet, {
+    fields: [transfer.fromWalletId],
+    references: [wallet.id],
+    relationName: 'fromWallet',
+  }),
+  toWallet: one(wallet, {
+    fields: [transfer.toWalletId],
+    references: [wallet.id],
+    relationName: 'toWallet',
+  }),
+}));
 
 export * from "./auth-schema";
