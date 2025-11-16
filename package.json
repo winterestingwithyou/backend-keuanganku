@@ -3,7 +3,7 @@
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
-    "deploy": "pnpm run cf-typegen && wrangler secret bulk .dev.vars.production && wrangler deploy --minify",
+    "deploy": "pnpm run cf-typegen && wrangler deploy --minify",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings",
     "better-auth-gen-schema": "pnpm dlx @better-auth/cli@latest generate --config ./better-auth.config.ts"
   },
