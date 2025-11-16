@@ -22,7 +22,6 @@ export const auth = (env: CloudflareBindings) => {
     }),
     baseURL: env.BETTER_AUTH_URL,
     secret: env.BETTER_AUTH_SECRET,
-
-    // Additional options that depend on env ...
+    trustedOrigins: env.TRUSTED_ORIGINS.split(",")
   });
 };

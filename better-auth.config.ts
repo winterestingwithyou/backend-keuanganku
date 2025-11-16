@@ -11,7 +11,7 @@ import { betterAuthOptions } from './src/lib/better-auth/options';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import * as schema from './src/db/schema';
 
-const { BETTER_AUTH_URL, BETTER_AUTH_SECRET } = process.env;
+const { BETTER_AUTH_URL, BETTER_AUTH_SECRET, TRUSTED_ORIGINS } = process.env;
 
 const db = {} as any;
 
@@ -20,5 +20,6 @@ export const auth: ReturnType<typeof betterAuth> = betterAuth({
   database: drizzleAdapter(db, { provider: 'sqlite', schema }),
   ...betterAuthOptions,
   baseURL: BETTER_AUTH_URL,
-  secret: BETTER_AUTH_SECRET
+  secret: BETTER_AUTH_SECRET,
+  trustedOrigins: TRUSTED_ORIGINS.split(",")
 });

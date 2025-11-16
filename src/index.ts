@@ -3,19 +3,17 @@ import { cors } from 'hono/cors'
 import { auth } from './lib/better-auth'
 import { authMiddleware, requireAuth } from './lib/better-auth/middleware'
 
-export type Env = {
-  DB: D1Database;
-  BETTER_AUTH_URL: string;
-  BETTER_AUTH_SECRET: string;
-}
-
-const app = new Hono<{ Bindings: Env }>()
+const app = new Hono<{ Bindings: CloudflareBindings }>()
 
 // CORS middleware
-app.use('*', cors({
-  origin: ['http://localhost:3000', 'http://localhost:5173'], // Tambahkan frontend URLs
-  credentials: true,
-}))
+app.use('*', (c, next) => {
+  const corsMiddleware = cors({
+    origin: c.env.TRUSTED_ORIGINS.split(","),
+    credentials: true,
+  })
+
+  return corsMiddleware(c, next);
+})
 
 // Auth middleware - inject auth instance ke context
 app.use('*', authMiddleware)
