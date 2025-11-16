@@ -26,7 +26,8 @@
       "binding": "DB",
       "database_name": "keuanganku",
       "database_id": "cee63075-c3e0-4174-bd0b-8fea08e29802",
-      "migrations_dir": "drizzle"
+      "migrations_dir": "drizzle",
+      "remote": true,
     }
   ],
   // "ai": {
