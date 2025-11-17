@@ -1,6 +1,5 @@
 import { createMiddleware } from 'hono/factory';
 import { auth } from './index';
-import type { Env } from '../../index';
 
 /**
  * Middleware untuk inject Better Auth instance ke context
@@ -22,7 +21,7 @@ import type { Env } from '../../index';
  * })
  * ```
  */
-export const authMiddleware = createMiddleware<{ Bindings: Env; Variables: { auth: ReturnType<typeof auth> } }>(
+export const authMiddleware = createMiddleware<{ Bindings: CloudflareBindings; Variables: { auth: ReturnType<typeof auth> } }>(
   async (c, next) => {
     const authInstance = auth(c.env);
     c.set('auth', authInstance);
@@ -42,7 +41,7 @@ export const authMiddleware = createMiddleware<{ Bindings: Env; Variables: { aut
  * ```
  */
 export const requireAuth = createMiddleware<{
-  Bindings: Env;
+  Bindings: CloudflareBindings;
   Variables: { auth: ReturnType<typeof auth>; user: any; session: any };
 }>(async (c, next) => {
   const authInstance = c.get('auth');

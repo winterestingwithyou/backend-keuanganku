@@ -27,7 +27,7 @@ app.use('*', (c, next) => {
 app.use('*', authMiddleware)
 
 // Better Auth routes - handle semua authentication endpoints
-app.on(['POST', 'GET'], '/api/auth/**', async (c) => {
+app.on(['POST', 'GET'], '/api/auth/*', async (c) => {
   const authInstance = auth(c.env)
   return authInstance.handler(c.req.raw)
 })
@@ -76,3 +76,7 @@ app.route('/api/dashboard', dashboardRoutes)
 app.route('/api/statistics', statisticsRoutes)
 
 export default app
+
+app.routes.forEach((route) => {
+  console.log(`Registered route: [${route.method}] ${route.path}`);
+});
