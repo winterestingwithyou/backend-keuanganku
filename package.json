@@ -3,15 +3,18 @@
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
-    "deploy": "pnpm run cf-typegen && wrangler deploy --minify",
+    "deploy": "bun run cf-typegen && wrangler deploy --minify",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings",
-    "better-auth-gen-schema": "pnpm dlx @better-auth/cli@latest generate --config ./better-auth.config.ts"
+    "db:generate": "drizzle-kit generate",
+    "db:migrate:local": "wrangler d1 execute keuanganku --local --file=./drizzle/0000_initial.sql",
+    "db:migrate:prod": "wrangler d1 execute keuanganku --remote --file=./drizzle/0000_initial.sql",
+    "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
     "@hono/zod-validator": "^0.7.4",
-    "better-auth": "^1.3.34",
     "dotenv": "^17.2.3",
     "drizzle-orm": "^0.44.7",
+    "firebase-admin": "^13.6.0",
     "hono": "^4.10.6",
     "zod": "^4.1.12"
   },

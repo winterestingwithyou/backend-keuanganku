@@ -1,9 +1,8 @@
-# Better Auth Configuration
-# Base URL untuk aplikasi (gunakan URL Cloudflare Workers untuk production)
-BETTER_AUTH_URL=http://localhost:8787
+# Firebase Configuration
+# Service Account JSON untuk Firebase Admin SDK
+# Download dari Firebase Console > Project Settings > Service Accounts > Generate New Private Key
+# Paste seluruh JSON content di sini (single line)
+FIREBASE_SERVICE_ACCOUNT_JSON={"type":"service_account","project_id":"your-project-id","private_key_id":"...","private_key":"...","client_email":"...","client_id":"...","auth_uri":"https://accounts.google.com/o/oauth2/auth","token_uri":"https://oauth2.googleapis.com/token","auth_provider_x509_cert_url":"https://www.googleapis.com/oauth2/v1/certs","client_x509_cert_url":"..."}
 
-# Secret key untuk Better Auth (minimal 32 karakter, gunakan random string untuk production)
-# Generate dengan: openssl rand -base64 32
-BETTER_AUTH_SECRET=development-secret-minimum-32-characters-long-change-in-production
-
+# CORS - Allowed origins
 TRUSTED_ORIGINS=http://localhost:3000,http://localhost:5173

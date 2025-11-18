@@ -1,7 +1,6 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
-import { auth } from './lib/better-auth'
-import { authMiddleware, requireAuth } from './lib/better-auth/middleware'
+import { requireFirebaseAuth } from './lib/firebase/middleware'
 
 // Import routes
 import walletRoutes from './routes/wallet'
@@ -23,29 +22,21 @@ app.use('*', (c, next) => {
   return corsMiddleware(c, next);
 })
 
-// Auth middleware - inject auth instance ke context
-app.use('*', authMiddleware)
-
-// Better Auth routes - handle semua authentication endpoints
-app.on(['POST', 'GET'], '/api/auth/*', async (c) => {
-  const authInstance = auth(c.env)
-  return authInstance.handler(c.req.raw)
-})
-
 // Public routes
 app.get('/', (c) => {
   return c.json({
-    message: 'Keuanganku API',
-    version: '1.0.0',
+    message: 'Keuanganku API - Firebase Auth Edition',
+    version: '2.0.0',
+    auth: 'Firebase Auth (handled by frontend)',
     endpoints: {
-      auth: '/api/auth/**',
       wallet: '/api/wallet',
       transaction: '/api/transaction',
       transfer: '/api/transfer',
       categories: '/api/categories',
       dashboard: '/api/dashboard',
       statistics: '/api/statistics/**'
-    }
+    },
+    note: 'All /api/* routes require Firebase Auth token in Authorization header'
   })
 })
 
@@ -54,16 +45,12 @@ app.get('/health', (c) => {
   return c.json({ status: 'ok', timestamp: new Date().toISOString() })
 })
 
-// Protected routes example
-app.get('/api/protected', requireAuth, async (c) => {
-  const user = c.get('user')
+// Protected routes example - test Firebase Auth
+app.get('/api/me', requireFirebaseAuth, async (c) => {
+  const firebaseUser = c.get('firebaseUser')
   return c.json({
-    message: 'This is a protected route',
-    user: {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-    }
+    message: 'Your Firebase user info',
+    user: firebaseUser
   })
 })
 
