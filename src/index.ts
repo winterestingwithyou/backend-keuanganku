@@ -27,7 +27,8 @@ app.get('/', (c) => {
   return c.json({
     message: 'Keuanganku API - Firebase Auth Edition',
     version: '2.0.0',
-    auth: 'Firebase Auth (handled by frontend)',
+    auth: 'Firebase Auth (handled by frontend - Kodular)',
+    note: 'User management ditangani oleh Firebase Auth. Backend hanya fokus data keuangan.',
     endpoints: {
       wallet: '/api/wallet',
       transaction: '/api/transaction',
@@ -36,22 +37,19 @@ app.get('/', (c) => {
       dashboard: '/api/dashboard',
       statistics: '/api/statistics/**'
     },
-    note: 'All /api/* routes require Firebase Auth token in Authorization header'
+    kodularFlow: {
+      1: 'User login via Firebase Auth component',
+      2: 'Call Get Id Token method',
+      3: 'On Got Id Token event → save token to TinyDB',
+      4: 'Use token for all API calls (Header: Authorization: Bearer <token>)'
+    },
+    tokenFormat: 'Authorization: Bearer <FIREBASE_ID_TOKEN>'
   })
 })
 
 // Health check
 app.get('/health', (c) => {
   return c.json({ status: 'ok', timestamp: new Date().toISOString() })
-})
-
-// Protected routes example - test Firebase Auth
-app.get('/api/me', requireFirebaseAuth, async (c) => {
-  const firebaseUser = c.get('firebaseUser')
-  return c.json({
-    message: 'Your Firebase user info',
-    user: firebaseUser
-  })
 })
 
 // Mount API routes

@@ -27,7 +27,6 @@ Backend API untuk aplikasi Keuanganku, dibangun dengan **Hono** + **Cloudflare D
                         ▼
         ┌───────────────────────────┐
         │   Cloudflare D1 (SQLite)  │
-        │   - users                 │
         │   - wallets               │
         │   - transactions          │
         │   - categories            │
@@ -139,23 +138,13 @@ Server akan berjalan di `http://localhost:8787`
 
 ## 📁 Database Schema
 
-### User Table
-```sql
-CREATE TABLE user (
-  id TEXT PRIMARY KEY,           -- Firebase UID
-  email TEXT UNIQUE NOT NULL,
-  name TEXT,
-  photo_url TEXT,
-  created_at INTEGER NOT NULL,
-  updated_at INTEGER NOT NULL
-);
-```
+> **Note:** User management ditangani 100% oleh Firebase Auth. Backend hanya menyimpan `user_id` (Firebase UID) di setiap tabel untuk ownership.
 
 ### Wallet Table
 ```sql
 CREATE TABLE wallet (
   id TEXT PRIMARY KEY,
-  user_id TEXT NOT NULL REFERENCES user(id),
+  user_id TEXT NOT NULL,         -- Firebase UID (no FK constraint)
   name TEXT NOT NULL,            -- 'Dana', 'OVO', 'Bank BCA', dll
   icon TEXT,
   color TEXT,
@@ -172,7 +161,7 @@ CREATE TABLE wallet (
 ```sql
 CREATE TABLE category (
   id TEXT PRIMARY KEY,
-  user_id TEXT NOT NULL REFERENCES user(id),
+  user_id TEXT NOT NULL,         -- Firebase UID (no FK constraint)
   name TEXT NOT NULL,            -- 'Makanan', 'Transport', 'Gaji', dll
   type TEXT NOT NULL,            -- 'income' | 'expense'
   icon TEXT,
@@ -186,7 +175,7 @@ CREATE TABLE category (
 ```sql
 CREATE TABLE transaction (
   id TEXT PRIMARY KEY,
-  user_id TEXT NOT NULL REFERENCES user(id),
+  user_id TEXT NOT NULL,         -- Firebase UID (no FK constraint)
   wallet_id TEXT NOT NULL REFERENCES wallet(id),
   category_id TEXT REFERENCES category(id),
   type TEXT NOT NULL,            -- 'income' | 'expense'
@@ -203,7 +192,7 @@ CREATE TABLE transaction (
 ```sql
 CREATE TABLE transfer (
   id TEXT PRIMARY KEY,
-  user_id TEXT NOT NULL REFERENCES user(id),
+  user_id TEXT NOT NULL,         -- Firebase UID (no FK constraint)
   from_wallet_id TEXT NOT NULL REFERENCES wallet(id),
   to_wallet_id TEXT NOT NULL REFERENCES wallet(id),
   amount REAL NOT NULL,
@@ -229,10 +218,6 @@ Authorization: Bearer <FIREBASE_ID_TOKEN>
 
 - `GET /` - API info
 - `GET /health` - Health check
-
-### User Endpoints
-
-- `GET /api/me` - Get current user info
 
 ### Wallet Endpoints
 

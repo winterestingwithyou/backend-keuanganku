@@ -1,10 +1,4 @@
-import { category, transaction, transfer, wallet, user } from "./schema";
-
-/**
- * User types - Firebase Auth
- */
-export type User = typeof user.$inferSelect;
-export type NewUser = typeof user.$inferInsert;
+import { category, transaction, transfer, wallet } from "./schema";
 
 /**
  * Wallet types

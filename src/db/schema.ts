@@ -1,4 +1,3 @@
-import { user } from "./auth-schema";
 import { sqliteTable, text, integer, real, index } from "drizzle-orm/sqlite-core";
 import { relations } from "drizzle-orm";
 
@@ -15,9 +14,7 @@ export const wallet = sqliteTable('wallet', {
   id: text('id')
     .primaryKey()
     .$defaultFn(() => generateId()),
-  userId: text('user_id')
-    .notNull()
-    .references(() => user.id, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull(), // Firebase UID - no FK constraint
   name: text('name').notNull(), // 'Dana', 'OVO', 'GoPay', 'Tunai', 'Bank BCA', dll
   icon: text('icon'), // emoji atau icon name
   color: text('color'), // hex color untuk UI
@@ -44,9 +41,7 @@ export const category = sqliteTable('category', {
   id: text('id')
     .primaryKey()
     .$defaultFn(() => generateId()),
-  userId: text('user_id')
-    .notNull()
-    .references(() => user.id, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull(), // Firebase UID - no FK constraint
   name: text('name').notNull(), // 'Makanan', 'Transport', 'Hiburan', 'Gaji', dll
   type: text('type', { enum: ['income', 'expense'] }).notNull(),
   icon: text('icon'),
@@ -67,9 +62,7 @@ export const transaction = sqliteTable('transaction', {
   id: text('id')
     .primaryKey()
     .$defaultFn(() => generateId()),
-  userId: text('user_id')
-    .notNull()
-    .references(() => user.id, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull(), // Firebase UID - no FK constraint
   walletId: text('wallet_id')
     .notNull()
     .references(() => wallet.id, { onDelete: 'cascade' }),
@@ -102,9 +95,7 @@ export const transfer = sqliteTable('transfer', {
   id: text('id')
     .primaryKey()
     .$defaultFn(() => generateId()),
-  userId: text('user_id')
-    .notNull()
-    .references(() => user.id, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull(), // Firebase UID - no FK constraint
   fromWalletId: text('from_wallet_id')
     .notNull()
     .references(() => wallet.id, { onDelete: 'cascade' }),
@@ -165,5 +156,3 @@ export const transferRelations = relations(transfer, ({ one }) => ({
     relationName: 'toWallet',
   }),
 }));
-
-export * from "./auth-schema";
