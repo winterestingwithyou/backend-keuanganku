@@ -65,7 +65,7 @@ export async function verifyFirebaseToken(idToken: string, serviceAccountJson: s
  * @param authHeader - Authorization header value
  * @returns Token string atau null
  */
-export function extractBearerToken(authHeader: string | null): string | null {
+export function extractBearerToken(authHeader: string | null | undefined): string | null {
   if (!authHeader) return null;
 
   const parts = authHeader.split(' ');

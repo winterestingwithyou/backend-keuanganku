@@ -3,22 +3,21 @@ import { eq, sum, desc, and } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/d1';
 import * as schema from '../db/schema';
 import { wallet, transaction } from '../db/schema';
-import { requireAuth } from '../lib/better-auth/middleware';
+import { requireFirebaseAuth } from '../lib/firebase/middleware';
 import { errorResponse, successResponse } from '../lib/utils';
-import { User, Session } from '../db/types';
+import { FirebaseUser } from '../db/types';
 
 type AppContext = {
   Bindings: CloudflareBindings;
   Variables: {
-    user: User;
-    session: Session;
+    firebaseUser: FirebaseUser;
   };
 };
 
 const app = new Hono<AppContext>();
 
 // All routes require authentication
-app.use('*', requireAuth);
+app.use('*', requireFirebaseAuth);
 
 /**
  * GET /api/dashboard - Get dashboard summary
@@ -26,12 +25,12 @@ app.use('*', requireAuth);
  */
 app.get('/', async (c) => {
   try {
-    const user = c.get('user');
+    const firebaseUser = c.get('firebaseUser');
     const db = drizzle(c.env.DB, { schema });
 
     // 1. Get all active wallets
     const wallets = await db.query.wallet.findMany({
-      where: eq(wallet.userId, user.id),
+      where: eq(wallet.userId, firebaseUser.uid),
       orderBy: [wallet.displayOrder, wallet.createdAt],
     });
 
@@ -46,7 +45,7 @@ app.get('/', async (c) => {
       .from(transaction)
       .where(
         and(
-          eq(transaction.userId, user.id),
+          eq(transaction.userId, firebaseUser.uid),
           eq(transaction.type, 'income')
         )
       );
@@ -59,7 +58,7 @@ app.get('/', async (c) => {
       .from(transaction)
       .where(
         and(
-          eq(transaction.userId, user.id),
+          eq(transaction.userId, firebaseUser.uid),
           eq(transaction.type, 'expense')
         )
       );
@@ -68,7 +67,7 @@ app.get('/', async (c) => {
 
     // 5. Get recent transactions (last 10)
     const recentTransactions = await db.query.transaction.findMany({
-      where: eq(transaction.userId, user.id),
+      where: eq(transaction.userId, firebaseUser.uid),
       orderBy: [desc(transaction.transactionDate), desc(transaction.createdAt)],
       limit: 10,
       with: {

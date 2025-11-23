@@ -4,7 +4,7 @@ import { eq, and, desc, gte, lte, count, or } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/d1';
 import * as schema from '../db/schema';
 import { transfer, wallet } from '../db/schema';
-import { requireAuth } from '../lib/better-auth/middleware';
+import { requireFirebaseAuth } from '../lib/firebase/middleware';
 import { createTransferSchema, listTransferQuerySchema } from '../validators/transfer';
 import {
   errorResponse,
@@ -13,34 +13,33 @@ import {
   getPaginationParams,
   paginationMeta,
 } from '../lib/utils';
-import { User, Session } from '../db/types';
+import { FirebaseUser } from '../db/types';
 
 type AppContext = {
   Bindings: CloudflareBindings;
   Variables: {
-    user: User;
-    session: Session;
+    firebaseUser: FirebaseUser;
   };
 };
 
 const app = new Hono<AppContext>();
 
 // All routes require authentication
-app.use('*', requireAuth);
+app.use('*', requireFirebaseAuth);
 
 /**
  * GET /api/transfer - List transfer history with filters
  */
 app.get('/', zValidator('query', listTransferQuerySchema), async (c) => {
   try {
-    const user = c.get('user');
+    const firebaseUser = c.get('firebaseUser');
     const db = drizzle(c.env.DB, { schema });
     const query = c.req.valid('query');
 
     const { offset, limit } = getPaginationParams(query.page, query.limit);
 
     // Build where conditions
-    const conditions = [eq(transfer.userId, user.id)];
+    const conditions = [eq(transfer.userId, firebaseUser.uid)];
 
     if (query.wallet_id) {
       // Show transfers where wallet is either sender or receiver
@@ -106,7 +105,7 @@ app.get('/', zValidator('query', listTransferQuerySchema), async (c) => {
  */
 app.post('/', zValidator('json', createTransferSchema), async (c) => {
   try {
-    const user = c.get('user');
+    const firebaseUser = c.get('firebaseUser');
     const db = drizzle(c.env.DB, { schema });
     const data = c.req.valid('json');
 
@@ -116,7 +115,7 @@ app.post('/', zValidator('json', createTransferSchema), async (c) => {
       data.fromWalletId,
       data.toWalletId,
       data.amount,
-      user.id,
+      firebaseUser.uid,
       data.fee
     );
 
@@ -131,7 +130,7 @@ app.post('/', zValidator('json', createTransferSchema), async (c) => {
     const result = await db.batch([
       // 1. Create transfer record
       db.insert(transfer).values({
-        userId: user.id,
+        userId: firebaseUser.uid,
         fromWalletId: data.fromWalletId,
         toWalletId: data.toWalletId,
         amount: data.amount,
@@ -177,12 +176,12 @@ app.post('/', zValidator('json', createTransferSchema), async (c) => {
  */
 app.get('/:id', async (c) => {
   try {
-    const user = c.get('user');
+    const firebaseUser = c.get('firebaseUser');
     const db = drizzle(c.env.DB, { schema });
     const transferId = c.req.param('id');
 
     const transferData = await db.query.transfer.findFirst({
-      where: and(eq(transfer.id, transferId), eq(transfer.userId, user.id)),
+      where: and(eq(transfer.id, transferId), eq(transfer.userId, firebaseUser.uid)),
       with: {
         fromWallet: {
           columns: {
@@ -219,13 +218,13 @@ app.get('/:id', async (c) => {
  */
 app.delete('/:id', async (c) => {
   try {
-    const user = c.get('user');
+    const firebaseUser = c.get('firebaseUser');
     const db = drizzle(c.env.DB, { schema });
     const transferId = c.req.param('id');
 
     // Get existing transfer
     const existingTransfer = await db.query.transfer.findFirst({
-      where: and(eq(transfer.id, transferId), eq(transfer.userId, user.id)),
+      where: and(eq(transfer.id, transferId), eq(transfer.userId, firebaseUser.uid)),
     });
 
     if (!existingTransfer) {

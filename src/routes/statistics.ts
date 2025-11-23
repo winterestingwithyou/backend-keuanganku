@@ -3,22 +3,21 @@ import { eq, and, sum, sql, gte, lte } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/d1';
 import * as schema from '../db/schema';
 import { wallet, transaction } from '../db/schema';
-import { requireAuth } from '../lib/better-auth/middleware';
+import { requireFirebaseAuth } from '../lib/firebase/middleware';
 import { errorResponse, successResponse } from '../lib/utils';
-import { User, Session } from '../db/types';
+import { FirebaseUser } from '../db/types';
 
 type AppContext = {
   Bindings: CloudflareBindings;
   Variables: {
-    user: User;
-    session: Session;
+    firebaseUser: FirebaseUser;
   };
 };
 
 const app = new Hono<AppContext>();
 
 // All routes require authentication
-app.use('*', requireAuth);
+app.use('*', requireFirebaseAuth);
 
 /**
  * GET /api/statistics/monthly - Get monthly income vs expense statistics
@@ -26,7 +25,7 @@ app.use('*', requireAuth);
  */
 app.get('/monthly', async (c) => {
   try {
-    const user = c.get('user');
+    const firebaseUser = c.get('firebaseUser');
     const db = drizzle(c.env.DB, { schema });
 
     const year = parseInt(c.req.query('year') || new Date().getFullYear().toString());
@@ -45,7 +44,7 @@ app.get('/monthly', async (c) => {
         .from(transaction)
         .where(
           and(
-            eq(transaction.userId, user.id),
+            eq(transaction.userId, firebaseUser.uid),
             eq(transaction.type, 'income'),
             gte(transaction.transactionDate, startDate),
             lte(transaction.transactionDate, endDate)
@@ -58,7 +57,7 @@ app.get('/monthly', async (c) => {
         .from(transaction)
         .where(
           and(
-            eq(transaction.userId, user.id),
+            eq(transaction.userId, firebaseUser.uid),
             eq(transaction.type, 'expense'),
             gte(transaction.transactionDate, startDate),
             lte(transaction.transactionDate, endDate)
@@ -91,7 +90,7 @@ app.get('/monthly', async (c) => {
  */
 app.get('/category', async (c) => {
   try {
-    const user = c.get('user');
+    const firebaseUser = c.get('firebaseUser');
     const db = drizzle(c.env.DB, { schema });
 
     const type = c.req.query('type') as 'income' | 'expense' | undefined;
@@ -99,7 +98,7 @@ app.get('/category', async (c) => {
     const endDate = c.req.query('end_date') ? new Date(c.req.query('end_date')!) : undefined;
 
     // Build where conditions
-    const conditions = [eq(transaction.userId, user.id)];
+    const conditions = [eq(transaction.userId, firebaseUser.uid)];
 
     if (type) {
       conditions.push(eq(transaction.type, type));
@@ -170,11 +169,11 @@ app.get('/category', async (c) => {
  */
 app.get('/wallet', async (c) => {
   try {
-    const user = c.get('user');
+    const firebaseUser = c.get('firebaseUser');
     const db = drizzle(c.env.DB, { schema });
 
     const wallets = await db.query.wallet.findMany({
-      where: and(eq(wallet.userId, user.id), eq(wallet.isActive, true)),
+      where: and(eq(wallet.userId, firebaseUser.uid), eq(wallet.isActive, true)),
       orderBy: [wallet.displayOrder, wallet.createdAt],
     });
 
@@ -222,7 +221,7 @@ app.get('/wallet', async (c) => {
  */
 app.get('/trends', async (c) => {
   try {
-    const user = c.get('user');
+    const firebaseUser = c.get('firebaseUser');
     const db = drizzle(c.env.DB, { schema });
 
     const period = (c.req.query('period') || 'daily') as 'daily' | 'weekly' | 'monthly';
@@ -246,7 +245,7 @@ app.get('/trends', async (c) => {
         .from(transaction)
         .where(
           and(
-            eq(transaction.userId, user.id),
+            eq(transaction.userId, firebaseUser.uid),
             eq(transaction.type, 'income'),
             gte(transaction.transactionDate, startDate),
             lte(transaction.transactionDate, endDate)
@@ -259,7 +258,7 @@ app.get('/trends', async (c) => {
         .from(transaction)
         .where(
           and(
-            eq(transaction.userId, user.id),
+            eq(transaction.userId, firebaseUser.uid),
             eq(transaction.type, 'expense'),
             gte(transaction.transactionDate, startDate),
             lte(transaction.transactionDate, endDate)

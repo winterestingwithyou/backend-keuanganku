@@ -4,35 +4,34 @@ import { eq, and, desc } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/d1';
 import * as schema from '../db/schema';
 import { wallet } from '../db/schema';
-import { requireAuth } from '../lib/better-auth/middleware';
+import { requireFirebaseAuth } from '../lib/firebase/middleware';
 import { createWalletSchema, updateWalletSchema, reorderWalletSchema } from '../validators/wallet';
 import { errorResponse, successResponse, validateWalletOwnership } from '../lib/utils';
-import { User, Session } from '../db/types';
+import { FirebaseUser } from '../db/types';
 
 type AppContext = {
   Bindings: CloudflareBindings;
   Variables: {
-    user: User;
-    session: Session;
+    firebaseUser: FirebaseUser;
   };
 };
 
 const app = new Hono<AppContext>();
 
 // All routes require authentication
-app.use('*', requireAuth);
+app.use('*', requireFirebaseAuth);
 
 /**
  * GET /api/wallet - List all wallets for current user
  */
 app.get('/', async (c) => {
   try {
-    const user = c.get('user');
+    const firebaseUser = c.get('firebaseUser');
     const db = drizzle(c.env.DB, { schema });
 
     const wallets = await db.query.wallet.findMany({
       where: and(
-        eq(wallet.userId, user.id),
+        eq(wallet.userId, firebaseUser.uid),
         eq(wallet.isActive, true)
       ),
       orderBy: [wallet.displayOrder, wallet.createdAt],
@@ -50,14 +49,14 @@ app.get('/', async (c) => {
  */
 app.post('/', zValidator('json', createWalletSchema), async (c) => {
   try {
-    const user = c.get('user');
+    const firebaseUser = c.get('firebaseUser');
     const db = drizzle(c.env.DB, { schema });
     const data = c.req.valid('json');
 
     // Check for duplicate wallet name
     const existingWallet = await db.query.wallet.findFirst({
       where: and(
-        eq(wallet.userId, user.id),
+        eq(wallet.userId, firebaseUser.uid),
         eq(wallet.name, data.name),
         eq(wallet.isActive, true)
       ),
@@ -72,7 +71,7 @@ app.post('/', zValidator('json', createWalletSchema), async (c) => {
 
     // Create wallet
     const newWallet = await db.insert(wallet).values({
-      userId: user.id,
+      userId: firebaseUser.uid,
       name: data.name,
       icon: data.icon,
       color: data.color,
@@ -93,14 +92,14 @@ app.post('/', zValidator('json', createWalletSchema), async (c) => {
  */
 app.get('/:id', async (c) => {
   try {
-    const user = c.get('user');
+    const firebaseUser = c.get('firebaseUser');
     const db = drizzle(c.env.DB, { schema });
     const walletId = c.req.param('id');
 
     const walletData = await db.query.wallet.findFirst({
       where: and(
         eq(wallet.id, walletId),
-        eq(wallet.userId, user.id)
+        eq(wallet.userId, firebaseUser.uid)
       ),
     });
 
@@ -120,13 +119,13 @@ app.get('/:id', async (c) => {
  */
 app.patch('/:id', zValidator('json', updateWalletSchema), async (c) => {
   try {
-    const user = c.get('user');
+    const firebaseUser = c.get('firebaseUser');
     const db = drizzle(c.env.DB, { schema });
     const walletId = c.req.param('id');
     const data = c.req.valid('json');
 
     // Validate ownership
-    const isOwner = await validateWalletOwnership(db, walletId, user.id);
+    const isOwner = await validateWalletOwnership(db, walletId, firebaseUser.uid);
     if (!isOwner) {
       return c.json(errorResponse('NOT_FOUND', 'Wallet not found'), 404);
     }
@@ -135,7 +134,7 @@ app.patch('/:id', zValidator('json', updateWalletSchema), async (c) => {
     if (data.name) {
       const existingWallet = await db.query.wallet.findFirst({
         where: and(
-          eq(wallet.userId, user.id),
+          eq(wallet.userId, firebaseUser.uid),
           eq(wallet.name, data.name),
           eq(wallet.isActive, true)
         ),
@@ -168,12 +167,12 @@ app.patch('/:id', zValidator('json', updateWalletSchema), async (c) => {
  */
 app.delete('/:id', async (c) => {
   try {
-    const user = c.get('user');
+    const firebaseUser = c.get('firebaseUser');
     const db = drizzle(c.env.DB, { schema });
     const walletId = c.req.param('id');
 
     // Validate ownership
-    const isOwner = await validateWalletOwnership(db, walletId, user.id);
+    const isOwner = await validateWalletOwnership(db, walletId, firebaseUser.uid);
     if (!isOwner) {
       return c.json(errorResponse('NOT_FOUND', 'Wallet not found'), 404);
     }
@@ -196,14 +195,14 @@ app.delete('/:id', async (c) => {
  */
 app.patch('/reorder', zValidator('json', reorderWalletSchema), async (c) => {
   try {
-    const user = c.get('user');
+    const firebaseUser = c.get('firebaseUser');
     const db = drizzle(c.env.DB, { schema });
     const { wallets } = c.req.valid('json');
 
     // Update each wallet's display order
     for (const item of wallets) {
       // Validate ownership
-      const isOwner = await validateWalletOwnership(db, item.id, user.id);
+      const isOwner = await validateWalletOwnership(db, item.id, firebaseUser.uid);
       if (isOwner) {
         await db
           .update(wallet)

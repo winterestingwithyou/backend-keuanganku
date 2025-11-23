@@ -4,34 +4,33 @@ import { eq, and } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/d1';
 import * as schema from '../db/schema';
 import { category } from '../db/schema';
-import { requireAuth } from '../lib/better-auth/middleware';
+import { requireFirebaseAuth } from '../lib/firebase/middleware';
 import { createCategorySchema, updateCategorySchema } from '../validators/category';
 import { errorResponse, successResponse } from '../lib/utils';
-import { User, Session } from '../db/types';
+import { FirebaseUser } from '../db/types';
 
 type AppContext = {
   Bindings: CloudflareBindings;
   Variables: {
-    user: User;
-    session: Session;
+    firebaseUser: FirebaseUser;
   };
 };
 
 const app = new Hono<AppContext>();
 
 // All routes require authentication
-app.use('*', requireAuth);
+app.use('*', requireFirebaseAuth);
 
 /**
  * GET /api/categories - List all categories (default + user-created)
  */
 app.get('/', async (c) => {
   try {
-    const user = c.get('user');
+    const firebaseUser = c.get('firebaseUser');
     const db = drizzle(c.env.DB, { schema });
 
     const categories = await db.query.category.findMany({
-      where: eq(category.userId, user.id),
+      where: eq(category.userId, firebaseUser.uid),
       orderBy: [category.type, category.name],
     });
 
@@ -47,14 +46,14 @@ app.get('/', async (c) => {
  */
 app.post('/', zValidator('json', createCategorySchema), async (c) => {
   try {
-    const user = c.get('user');
+    const firebaseUser = c.get('firebaseUser');
     const db = drizzle(c.env.DB, { schema });
     const data = c.req.valid('json');
 
     // Check for duplicate category name
     const existingCategory = await db.query.category.findFirst({
       where: and(
-        eq(category.userId, user.id),
+        eq(category.userId, firebaseUser.uid),
         eq(category.name, data.name),
         eq(category.type, data.type)
       ),
@@ -71,7 +70,7 @@ app.post('/', zValidator('json', createCategorySchema), async (c) => {
     const newCategory = await db
       .insert(category)
       .values({
-        userId: user.id,
+        userId: firebaseUser.uid,
         name: data.name,
         type: data.type,
         icon: data.icon,
@@ -92,14 +91,14 @@ app.post('/', zValidator('json', createCategorySchema), async (c) => {
  */
 app.patch('/:id', zValidator('json', updateCategorySchema), async (c) => {
   try {
-    const user = c.get('user');
+    const firebaseUser = c.get('firebaseUser');
     const db = drizzle(c.env.DB, { schema });
     const categoryId = c.req.param('id');
     const data = c.req.valid('json');
 
     // Get existing category
     const existingCategory = await db.query.category.findFirst({
-      where: and(eq(category.id, categoryId), eq(category.userId, user.id)),
+      where: and(eq(category.id, categoryId), eq(category.userId, firebaseUser.uid)),
     });
 
     if (!existingCategory) {
@@ -118,7 +117,7 @@ app.patch('/:id', zValidator('json', updateCategorySchema), async (c) => {
     if (data.name) {
       const duplicateCategory = await db.query.category.findFirst({
         where: and(
-          eq(category.userId, user.id),
+          eq(category.userId, firebaseUser.uid),
           eq(category.name, data.name),
           eq(category.type, existingCategory.type)
         ),
@@ -151,13 +150,13 @@ app.patch('/:id', zValidator('json', updateCategorySchema), async (c) => {
  */
 app.delete('/:id', async (c) => {
   try {
-    const user = c.get('user');
+    const firebaseUser = c.get('firebaseUser');
     const db = drizzle(c.env.DB, { schema });
     const categoryId = c.req.param('id');
 
     // Get existing category
     const existingCategory = await db.query.category.findFirst({
-      where: and(eq(category.id, categoryId), eq(category.userId, user.id)),
+      where: and(eq(category.id, categoryId), eq(category.userId, firebaseUser.uid)),
     });
 
     if (!existingCategory) {

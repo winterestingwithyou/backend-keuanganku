@@ -4,7 +4,7 @@ import { eq, and, desc, gte, lte, count } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/d1';
 import * as schema from '../db/schema';
 import { transaction, wallet } from '../db/schema';
-import { requireAuth } from '../lib/better-auth/middleware';
+import { requireFirebaseAuth } from '../lib/firebase/middleware';
 import {
   createTransactionSchema,
   updateTransactionSchema,
@@ -18,34 +18,33 @@ import {
   getPaginationParams,
   paginationMeta,
 } from '../lib/utils';
-import { User, Session } from '../db/types';
+import { FirebaseUser } from '../db/types';
 
 type AppContext = {
   Bindings: CloudflareBindings;
   Variables: {
-    user: User;
-    session: Session;
+    firebaseUser: FirebaseUser;
   };
 };
 
 const app = new Hono<AppContext>();
 
 // All routes require authentication
-app.use('*', requireAuth);
+app.use('*', requireFirebaseAuth);
 
 /**
  * GET /api/transaction - List transactions with filters
  */
 app.get('/', zValidator('query', listTransactionQuerySchema), async (c) => {
   try {
-    const user = c.get('user');
+    const firebaseUser = c.get('firebaseUser');
     const db = drizzle(c.env.DB, { schema });
     const query = c.req.valid('query');
 
     const { offset, limit } = getPaginationParams(query.page, query.limit);
 
     // Build where conditions
-    const conditions = [eq(transaction.userId, user.id)];
+    const conditions = [eq(transaction.userId, firebaseUser.uid)];
 
     if (query.wallet_id) {
       conditions.push(eq(transaction.walletId, query.wallet_id));
@@ -115,11 +114,11 @@ app.get('/', zValidator('query', listTransactionQuerySchema), async (c) => {
  */
 app.get('/recent', async (c) => {
   try {
-    const user = c.get('user');
+    const firebaseUser = c.get('firebaseUser');
     const db = drizzle(c.env.DB, { schema });
 
     const transactions = await db.query.transaction.findMany({
-      where: eq(transaction.userId, user.id),
+      where: eq(transaction.userId, firebaseUser.uid),
       orderBy: [desc(transaction.transactionDate), desc(transaction.createdAt)],
       limit: 10,
       with: {
@@ -154,12 +153,12 @@ app.get('/recent', async (c) => {
  */
 app.post('/', zValidator('json', createTransactionSchema), async (c) => {
   try {
-    const user = c.get('user');
+    const firebaseUser = c.get('firebaseUser');
     const db = drizzle(c.env.DB, { schema });
     const data = c.req.valid('json');
 
     // Validate wallet ownership
-    const isOwner = await validateWalletOwnership(db, data.walletId, user.id);
+    const isOwner = await validateWalletOwnership(db, data.walletId, firebaseUser.uid);
     if (!isOwner) {
       return c.json(errorResponse('NOT_FOUND', 'Wallet not found'), 404);
     }
@@ -168,7 +167,7 @@ app.post('/', zValidator('json', createTransactionSchema), async (c) => {
     const newTransaction = await db
       .insert(transaction)
       .values({
-        userId: user.id,
+        userId: firebaseUser.uid,
         walletId: data.walletId,
         categoryId: data.categoryId,
         type: data.type,
@@ -194,12 +193,12 @@ app.post('/', zValidator('json', createTransactionSchema), async (c) => {
  */
 app.get('/:id', async (c) => {
   try {
-    const user = c.get('user');
+    const firebaseUser = c.get('firebaseUser');
     const db = drizzle(c.env.DB, { schema });
     const transactionId = c.req.param('id');
 
     const transactionData = await db.query.transaction.findFirst({
-      where: and(eq(transaction.id, transactionId), eq(transaction.userId, user.id)),
+      where: and(eq(transaction.id, transactionId), eq(transaction.userId, firebaseUser.uid)),
       with: {
         wallet: {
           columns: {
@@ -236,14 +235,14 @@ app.get('/:id', async (c) => {
  */
 app.patch('/:id', zValidator('json', updateTransactionSchema), async (c) => {
   try {
-    const user = c.get('user');
+    const firebaseUser = c.get('firebaseUser');
     const db = drizzle(c.env.DB, { schema });
     const transactionId = c.req.param('id');
     const data = c.req.valid('json');
 
     // Get existing transaction
     const existingTransaction = await db.query.transaction.findFirst({
-      where: and(eq(transaction.id, transactionId), eq(transaction.userId, user.id)),
+      where: and(eq(transaction.id, transactionId), eq(transaction.userId, firebaseUser.uid)),
     });
 
     if (!existingTransaction) {
@@ -252,7 +251,7 @@ app.patch('/:id', zValidator('json', updateTransactionSchema), async (c) => {
 
     // If wallet is changing, validate new wallet ownership
     if (data.walletId && data.walletId !== existingTransaction.walletId) {
-      const isOwner = await validateWalletOwnership(db, data.walletId, user.id);
+      const isOwner = await validateWalletOwnership(db, data.walletId, firebaseUser.uid);
       if (!isOwner) {
         return c.json(errorResponse('NOT_FOUND', 'New wallet not found'), 404);
       }
@@ -285,13 +284,13 @@ app.patch('/:id', zValidator('json', updateTransactionSchema), async (c) => {
  */
 app.delete('/:id', async (c) => {
   try {
-    const user = c.get('user');
+    const firebaseUser = c.get('firebaseUser');
     const db = drizzle(c.env.DB, { schema });
     const transactionId = c.req.param('id');
 
     // Get existing transaction
     const existingTransaction = await db.query.transaction.findFirst({
-      where: and(eq(transaction.id, transactionId), eq(transaction.userId, user.id)),
+      where: and(eq(transaction.id, transactionId), eq(transaction.userId, firebaseUser.uid)),
     });
 
     if (!existingTransaction) {
