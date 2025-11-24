@@ -1,9 +1,6 @@
 import { sqliteTable, text, integer, real, index } from "drizzle-orm/sqlite-core";
 import { relations } from "drizzle-orm";
 
-// Generate UUID v4
-const generateId = () => crypto.randomUUID();
-
 // Current timestamp as Date
 const now = () => new Date();
 
@@ -11,9 +8,7 @@ const now = () => new Date();
 // WALLET TABLE (Tempat pencatatan keuangan)
 // ============================================
 export const wallet = sqliteTable('wallet', {
-  id: text('id')
-    .primaryKey()
-    .$defaultFn(() => generateId()),
+  id: integer('id').primaryKey({ autoIncrement: true }),
   userId: text('user_id').notNull(), // Firebase UID - no FK constraint
   name: text('name').notNull(), // 'Dana', 'OVO', 'GoPay', 'Tunai', 'Bank BCA', dll
   color: text('color'), // hex color untuk UI
@@ -37,9 +32,7 @@ export const wallet = sqliteTable('wallet', {
 // CATEGORY TABLE (Kategori transaksi)
 // ============================================
 export const category = sqliteTable('category', {
-  id: text('id')
-    .primaryKey()
-    .$defaultFn(() => generateId()),
+  id: integer('id').primaryKey({ autoIncrement: true }),
   userId: text('user_id').notNull(), // Firebase UID - no FK constraint
   name: text('name').notNull(), // 'Makanan', 'Transport', 'Hiburan', 'Gaji', dll
   type: text('type', { enum: ['income', 'expense'] }).notNull(),
@@ -58,14 +51,12 @@ export const category = sqliteTable('category', {
 // TRANSACTION TABLE (Transaksi keuangan)
 // ============================================
 export const transaction = sqliteTable('transaction', {
-  id: text('id')
-    .primaryKey()
-    .$defaultFn(() => generateId()),
+  id: integer('id').primaryKey({ autoIncrement: true }),
   userId: text('user_id').notNull(), // Firebase UID - no FK constraint
-  walletId: text('wallet_id')
+  walletId: integer('wallet_id')
     .notNull()
     .references(() => wallet.id, { onDelete: 'cascade' }),
-  categoryId: text('category_id')
+  categoryId: integer('category_id')
     .references(() => category.id, { onDelete: 'set null' }),
   type: text('type', { enum: ['income', 'expense'] }).notNull(),
   amount: real('amount').notNull(), // harus > 0, validasi di application layer
@@ -91,14 +82,12 @@ export const transaction = sqliteTable('transaction', {
 // TRANSFER TABLE (Transfer antar wallet)
 // ============================================
 export const transfer = sqliteTable('transfer', {
-  id: text('id')
-    .primaryKey()
-    .$defaultFn(() => generateId()),
+  id: integer('id').primaryKey({ autoIncrement: true }),
   userId: text('user_id').notNull(), // Firebase UID - no FK constraint
-  fromWalletId: text('from_wallet_id')
+  fromWalletId: integer('from_wallet_id')
     .notNull()
     .references(() => wallet.id, { onDelete: 'cascade' }),
-  toWalletId: text('to_wallet_id')
+  toWalletId: integer('to_wallet_id')
     .notNull()
     .references(() => wallet.id, { onDelete: 'cascade' }),
   amount: real('amount').notNull(), // harus > 0
