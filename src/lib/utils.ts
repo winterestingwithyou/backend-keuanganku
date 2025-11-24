@@ -5,12 +5,12 @@ import { wallet, transaction, transfer } from '../db/schema';
 
 /**
  * Recalculate wallet balance dari transaction & transfer
- * 
+ *
  * Formula: initial_balance + SUM(income) - SUM(expense) + transfer_in - transfer_out - transfer_fees
  */
 export async function recalculateWalletBalance(
   db: DrizzleD1Database<typeof schema>,
-  walletId: string
+  walletId: number
 ): Promise<number> {
   // Get wallet initial balance
   const walletData = await db.query.wallet.findFirst({
@@ -80,7 +80,7 @@ export async function recalculateWalletBalance(
  */
 export async function validateWalletOwnership(
   db: DrizzleD1Database<typeof schema>,
-  walletId: string,
+  walletId: number,
   userId: string
 ): Promise<boolean> {
   const walletData = await db.query.wallet.findFirst({
@@ -136,8 +136,8 @@ export function formatCurrency(amount: number, currency: string = 'IDR'): string
  */
 export async function validateTransfer(
   db: DrizzleD1Database<typeof schema>,
-  fromWalletId: string,
-  toWalletId: string,
+  fromWalletId: number,
+  toWalletId: number,
   amount: number,
   userId: string,
   fee: number = 0
@@ -199,7 +199,7 @@ export async function validateTransfer(
  */
 export async function updateWalletBalance(
   db: DrizzleD1Database<typeof schema>,
-  walletId: string
+  walletId: number
 ): Promise<void> {
   const newBalance = await recalculateWalletBalance(db, walletId);
 

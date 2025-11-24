@@ -132,7 +132,7 @@ app.get('/category', async (c) => {
     const categoryMap = new Map<string, any>();
 
     transactions.forEach((t) => {
-      const categoryKey = t.categoryId || 'uncategorized';
+      const categoryKey = t.categoryId?.toString() || 'uncategorized';
       const cat = t.category as any;
       const categoryName = cat ? cat.name : 'Uncategorized';
 

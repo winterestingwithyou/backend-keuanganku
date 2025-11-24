@@ -93,8 +93,12 @@ app.patch('/:id', zValidator('json', updateCategorySchema), async (c) => {
   try {
     const firebaseUser = c.get('firebaseUser');
     const db = drizzle(c.env.DB, { schema });
-    const categoryId = c.req.param('id');
+    const categoryId = Number(c.req.param('id'));
     const data = c.req.valid('json');
+
+    if (isNaN(categoryId)) {
+      return c.json(errorResponse('VALIDATION_ERROR', 'Invalid category ID'), 400);
+    }
 
     // Get existing category
     const existingCategory = await db.query.category.findFirst({
@@ -152,7 +156,11 @@ app.delete('/:id', async (c) => {
   try {
     const firebaseUser = c.get('firebaseUser');
     const db = drizzle(c.env.DB, { schema });
-    const categoryId = c.req.param('id');
+    const categoryId = Number(c.req.param('id'));
+
+    if (isNaN(categoryId)) {
+      return c.json(errorResponse('VALIDATION_ERROR', 'Invalid category ID'), 400);
+    }
 
     // Get existing category
     const existingCategory = await db.query.category.findFirst({

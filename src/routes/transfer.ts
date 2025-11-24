@@ -176,7 +176,11 @@ app.get('/:id', async (c) => {
   try {
     const firebaseUser = c.get('firebaseUser');
     const db = drizzle(c.env.DB, { schema });
-    const transferId = c.req.param('id');
+    const transferId = Number(c.req.param('id'));
+
+    if (isNaN(transferId)) {
+      return c.json(errorResponse('VALIDATION_ERROR', 'Invalid transfer ID'), 400);
+    }
 
     const transferData = await db.query.transfer.findFirst({
       where: and(eq(transfer.id, transferId), eq(transfer.userId, firebaseUser.uid)),
@@ -216,7 +220,11 @@ app.delete('/:id', async (c) => {
   try {
     const firebaseUser = c.get('firebaseUser');
     const db = drizzle(c.env.DB, { schema });
-    const transferId = c.req.param('id');
+    const transferId = Number(c.req.param('id'));
+
+    if (isNaN(transferId)) {
+      return c.json(errorResponse('VALIDATION_ERROR', 'Invalid transfer ID'), 400);
+    }
 
     // Get existing transfer
     const existingTransfer = await db.query.transfer.findFirst({

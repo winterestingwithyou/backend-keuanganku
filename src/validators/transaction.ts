@@ -4,8 +4,8 @@ import { z } from 'zod';
  * Schema untuk create transaction
  */
 export const createTransactionSchema = z.object({
-  walletId: z.string().min(1, 'Wallet ID is required'),
-  categoryId: z.string().optional(),
+  walletId: z.number().int().positive('Wallet ID is required'),
+  categoryId: z.number().int().positive().optional(),
   type: z.enum(['income', 'expense'], {
     message: 'Type must be either income or expense',
   }),
@@ -19,8 +19,8 @@ export const createTransactionSchema = z.object({
  * Schema untuk update transaction
  */
 export const updateTransactionSchema = z.object({
-  walletId: z.string().optional(),
-  categoryId: z.string().optional(),
+  walletId: z.number().int().positive().optional(),
+  categoryId: z.number().int().positive().optional(),
   type: z.enum(['income', 'expense']).optional(),
   amount: z.number().positive().optional(),
   description: z.string().optional(),
@@ -32,9 +32,9 @@ export const updateTransactionSchema = z.object({
  * Schema untuk query parameters list transaction
  */
 export const listTransactionQuerySchema = z.object({
-  wallet_id: z.string().optional(),
+  wallet_id: z.coerce.number().int().positive().optional(),
   type: z.enum(['income', 'expense']).optional(),
-  category_id: z.string().optional(),
+  category_id: z.coerce.number().int().positive().optional(),
   start_date: z.coerce.date().optional(),
   end_date: z.coerce.date().optional(),
   page: z.coerce.number().int().positive().default(1),

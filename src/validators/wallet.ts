@@ -26,7 +26,7 @@ export const updateWalletSchema = z.object({
 export const reorderWalletSchema = z.object({
   wallets: z.array(
     z.object({
-      id: z.string(),
+      id: z.number().int().positive(),
       displayOrder: z.number().int().min(0),
     })
   ),

@@ -193,7 +193,11 @@ app.get('/:id', async (c) => {
   try {
     const firebaseUser = c.get('firebaseUser');
     const db = drizzle(c.env.DB, { schema });
-    const transactionId = c.req.param('id');
+    const transactionId = Number(c.req.param('id'));
+
+    if (isNaN(transactionId)) {
+      return c.json(errorResponse('VALIDATION_ERROR', 'Invalid transaction ID'), 400);
+    }
 
     const transactionData = await db.query.transaction.findFirst({
       where: and(eq(transaction.id, transactionId), eq(transaction.userId, firebaseUser.uid)),
@@ -234,8 +238,12 @@ app.patch('/:id', zValidator('json', updateTransactionSchema), async (c) => {
   try {
     const firebaseUser = c.get('firebaseUser');
     const db = drizzle(c.env.DB, { schema });
-    const transactionId = c.req.param('id');
+    const transactionId = Number(c.req.param('id'));
     const data = c.req.valid('json');
+
+    if (isNaN(transactionId)) {
+      return c.json(errorResponse('VALIDATION_ERROR', 'Invalid transaction ID'), 400);
+    }
 
     // Get existing transaction
     const existingTransaction = await db.query.transaction.findFirst({
@@ -283,7 +291,11 @@ app.delete('/:id', async (c) => {
   try {
     const firebaseUser = c.get('firebaseUser');
     const db = drizzle(c.env.DB, { schema });
-    const transactionId = c.req.param('id');
+    const transactionId = Number(c.req.param('id'));
+
+    if (isNaN(transactionId)) {
+      return c.json(errorResponse('VALIDATION_ERROR', 'Invalid transaction ID'), 400);
+    }
 
     // Get existing transaction
     const existingTransaction = await db.query.transaction.findFirst({

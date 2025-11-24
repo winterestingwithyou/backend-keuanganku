@@ -93,7 +93,11 @@ app.get('/:id', async (c) => {
   try {
     const firebaseUser = c.get('firebaseUser');
     const db = drizzle(c.env.DB, { schema });
-    const walletId = c.req.param('id');
+    const walletId = Number(c.req.param('id'));
+
+    if (isNaN(walletId)) {
+      return c.json(errorResponse('VALIDATION_ERROR', 'Invalid wallet ID'), 400);
+    }
 
     const walletData = await db.query.wallet.findFirst({
       where: and(
@@ -120,8 +124,12 @@ app.patch('/:id', zValidator('json', updateWalletSchema), async (c) => {
   try {
     const firebaseUser = c.get('firebaseUser');
     const db = drizzle(c.env.DB, { schema });
-    const walletId = c.req.param('id');
+    const walletId = Number(c.req.param('id'));
     const data = c.req.valid('json');
+
+    if (isNaN(walletId)) {
+      return c.json(errorResponse('VALIDATION_ERROR', 'Invalid wallet ID'), 400);
+    }
 
     // Validate ownership
     const isOwner = await validateWalletOwnership(db, walletId, firebaseUser.uid);
@@ -168,7 +176,11 @@ app.delete('/:id', async (c) => {
   try {
     const firebaseUser = c.get('firebaseUser');
     const db = drizzle(c.env.DB, { schema });
-    const walletId = c.req.param('id');
+    const walletId = Number(c.req.param('id'));
+
+    if (isNaN(walletId)) {
+      return c.json(errorResponse('VALIDATION_ERROR', 'Invalid wallet ID'), 400);
+    }
 
     // Validate ownership
     const isOwner = await validateWalletOwnership(db, walletId, firebaseUser.uid);
