@@ -77,7 +77,6 @@ app.get('/', zValidator('query', listTransactionQuerySchema), async (c) => {
           columns: {
             id: true,
             name: true,
-            icon: true,
             color: true,
           },
         },
@@ -126,7 +125,6 @@ app.get('/recent', async (c) => {
           columns: {
             id: true,
             name: true,
-            icon: true,
             color: true,
           },
         },
@@ -204,7 +202,6 @@ app.get('/:id', async (c) => {
           columns: {
             id: true,
             name: true,
-            icon: true,
             color: true,
           },
         },

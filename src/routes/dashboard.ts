@@ -75,7 +75,6 @@ app.get('/', async (c) => {
           columns: {
             id: true,
             name: true,
-            icon: true,
             color: true,
           },
         },
@@ -94,7 +93,6 @@ app.get('/', async (c) => {
     const walletSummary = activeWallets.map((w) => ({
       id: w.id,
       name: w.name,
-      icon: w.icon,
       color: w.color,
       currentBalance: w.currentBalance,
       displayOrder: w.displayOrder,

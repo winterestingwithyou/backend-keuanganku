@@ -197,7 +197,6 @@ app.get('/wallet', async (c) => {
         return {
           id: w.id,
           name: w.name,
-          icon: w.icon,
           color: w.color,
           initialBalance: w.initialBalance,
           currentBalance: w.currentBalance,

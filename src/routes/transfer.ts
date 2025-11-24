@@ -70,7 +70,6 @@ app.get('/', zValidator('query', listTransferQuerySchema), async (c) => {
           columns: {
             id: true,
             name: true,
-            icon: true,
             color: true,
           },
         },
@@ -78,7 +77,6 @@ app.get('/', zValidator('query', listTransferQuerySchema), async (c) => {
           columns: {
             id: true,
             name: true,
-            icon: true,
             color: true,
           },
         },
@@ -187,7 +185,6 @@ app.get('/:id', async (c) => {
           columns: {
             id: true,
             name: true,
-            icon: true,
             color: true,
           },
         },
@@ -195,7 +192,6 @@ app.get('/:id', async (c) => {
           columns: {
             id: true,
             name: true,
-            icon: true,
             color: true,
           },
         },
