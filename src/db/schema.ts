@@ -16,7 +16,6 @@ export const wallet = sqliteTable('wallet', {
     .$defaultFn(() => generateId()),
   userId: text('user_id').notNull(), // Firebase UID - no FK constraint
   name: text('name').notNull(), // 'Dana', 'OVO', 'GoPay', 'Tunai', 'Bank BCA', dll
-  icon: text('icon'), // emoji atau icon name
   color: text('color'), // hex color untuk UI
   initialBalance: real('initial_balance').notNull().default(0), // saldo awal
   currentBalance: real('current_balance').notNull().default(0), // saldo saat ini (cached)

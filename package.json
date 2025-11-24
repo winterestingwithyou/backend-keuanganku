@@ -6,8 +6,7 @@
     "deploy": "bun run cf-typegen && wrangler deploy --minify",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings",
     "db:generate": "drizzle-kit generate",
-    "db:migrate:local": "wrangler d1 execute keuanganku --local --file=./drizzle/0000_initial.sql",
-    "db:migrate:prod": "wrangler d1 execute keuanganku --remote --file=./drizzle/0000_initial.sql",
+    "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {

@@ -81,7 +81,6 @@ export async function seedDefaultWallet(db: ReturnType<typeof drizzle>, userId: 
     .values({
       userId,
       name: 'Dompet Utama',
-      icon: '👛',
       color: '#3b82f6',
       initialBalance: 0,
       currentBalance: 0,

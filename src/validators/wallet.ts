@@ -5,7 +5,6 @@ import { z } from 'zod';
  */
 export const createWalletSchema = z.object({
   name: z.string().min(1, 'Name is required').max(50, 'Name must be less than 50 characters'),
-  icon: z.string().optional(),
   color: z.string().optional(),
   initialBalance: z.number().min(0, 'Initial balance cannot be negative').default(0),
   displayOrder: z.number().int().min(0).optional().default(0),
@@ -16,7 +15,6 @@ export const createWalletSchema = z.object({
  */
 export const updateWalletSchema = z.object({
   name: z.string().min(1).max(50).optional(),
-  icon: z.string().optional(),
   color: z.string().optional(),
   displayOrder: z.number().int().min(0).optional(),
   isActive: z.boolean().optional(),

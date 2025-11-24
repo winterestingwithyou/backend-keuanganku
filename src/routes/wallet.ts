@@ -73,7 +73,6 @@ app.post('/', zValidator('json', createWalletSchema), async (c) => {
     const newWallet = await db.insert(wallet).values({
       userId: firebaseUser.uid,
       name: data.name,
-      icon: data.icon,
       color: data.color,
       initialBalance: data.initialBalance,
       currentBalance: data.initialBalance,
