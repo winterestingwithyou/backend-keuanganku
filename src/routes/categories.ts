@@ -87,9 +87,9 @@ app.post('/', zValidator('json', createCategorySchema), async (c) => {
 });
 
 /**
- * PATCH /api/categories/:id - Update category (user-created only)
+ * PUT /api/categories/:id - Update category (user-created only)
  */
-app.patch('/:id', zValidator('json', updateCategorySchema), async (c) => {
+app.put('/:id', zValidator('json', updateCategorySchema), async (c) => {
   try {
     const firebaseUser = c.get('firebaseUser');
     const db = drizzle(c.env.DB, { schema });

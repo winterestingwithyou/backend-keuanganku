@@ -232,9 +232,9 @@ app.get('/:id', async (c) => {
 });
 
 /**
- * PATCH /api/transaction/:id - Update transaction
+ * PUT /api/transaction/:id - Update transaction
  */
-app.patch('/:id', zValidator('json', updateTransactionSchema), async (c) => {
+app.put('/:id', zValidator('json', updateTransactionSchema), async (c) => {
   try {
     const firebaseUser = c.get('firebaseUser');
     const db = drizzle(c.env.DB, { schema });

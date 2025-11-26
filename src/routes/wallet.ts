@@ -118,9 +118,9 @@ app.get('/:id', async (c) => {
 });
 
 /**
- * PATCH /api/wallet/:id - Update wallet
+ * PUT /api/wallet/:id - Update wallet
  */
-app.patch('/:id', zValidator('json', updateWalletSchema), async (c) => {
+app.put('/:id', zValidator('json', updateWalletSchema), async (c) => {
   try {
     const firebaseUser = c.get('firebaseUser');
     const db = drizzle(c.env.DB, { schema });
@@ -202,9 +202,9 @@ app.delete('/:id', async (c) => {
 });
 
 /**
- * PATCH /api/wallet/reorder - Update display order of wallets
+ * PUT /api/wallet/reorder - Update display order of wallets
  */
-app.patch('/reorder', zValidator('json', reorderWalletSchema), async (c) => {
+app.put('/reorder', zValidator('json', reorderWalletSchema), async (c) => {
   try {
     const firebaseUser = c.get('firebaseUser');
     const db = drizzle(c.env.DB, { schema });
