@@ -22,7 +22,7 @@ const app = new Hono<AppContext>();
 app.use('*', requireFirebaseAuth);
 
 /**
- * GET /api/categories - List all categories (default + user-created)
+ * GET /api/categories - List all categories grouped by type
  */
 app.get('/', async (c) => {
   try {
@@ -31,10 +31,14 @@ app.get('/', async (c) => {
 
     const categories = await db.query.category.findMany({
       where: eq(category.userId, firebaseUser.uid),
-      orderBy: [category.type, category.name],
+      orderBy: [category.name],
     });
 
-    return c.json(successResponse(categories));
+    // Group categories by type
+    const income = categories.filter((cat) => cat.type === 'income');
+    const expense = categories.filter((cat) => cat.type === 'expense');
+
+    return c.json(successResponse({ income, expense }));
   } catch (error) {
     console.error('Error fetching categories:', error);
     return c.json(errorResponse('INTERNAL_ERROR', 'Failed to fetch categories'), 500);
@@ -74,7 +78,6 @@ app.post('/', zValidator('json', createCategorySchema), async (c) => {
         name: data.name,
         type: data.type,
         icon: data.icon,
-        color: data.color,
         isDefault: false,
       })
       .returning();

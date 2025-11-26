@@ -37,7 +37,6 @@ export const category = sqliteTable('category', {
   name: text('name').notNull(), // 'Makanan', 'Transport', 'Hiburan', 'Gaji', dll
   type: text('type', { enum: ['income', 'expense'] }).notNull(),
   icon: text('icon'),
-  color: text('color'),
   isDefault: integer('is_default', { mode: 'boolean' }).notNull().default(false), // system vs user-created
   createdAt: integer('created_at', { mode: 'timestamp_ms' })
     .notNull()

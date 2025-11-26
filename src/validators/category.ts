@@ -9,7 +9,6 @@ export const createCategorySchema = z.object({
     message: 'Type must be either income or expense',
   }),
   icon: z.string().optional(),
-  color: z.string().optional(),
 });
 
 /**
@@ -18,7 +17,6 @@ export const createCategorySchema = z.object({
 export const updateCategorySchema = z.object({
   name: z.string().min(1).max(50).optional(),
   icon: z.string().optional(),
-  color: z.string().optional(),
 });
 
 export type CreateCategoryInput = z.infer<typeof createCategorySchema>;

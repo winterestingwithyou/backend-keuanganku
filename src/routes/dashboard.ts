@@ -83,7 +83,6 @@ app.get('/', async (c) => {
             id: true,
             name: true,
             icon: true,
-            color: true,
           },
         },
       },
