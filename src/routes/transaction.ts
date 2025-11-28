@@ -74,7 +74,6 @@ app.get('/', zValidator('query', listTransactionQuerySchema), async (c) => {
           columns: {
             id: true,
             name: true,
-            color: true,
           },
         },
         category: {
@@ -82,6 +81,7 @@ app.get('/', zValidator('query', listTransactionQuerySchema), async (c) => {
             id: true,
             name: true,
             icon: true,
+            type: true,
           },
         },
       },
