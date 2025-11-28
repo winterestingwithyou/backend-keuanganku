@@ -50,6 +50,13 @@
       "when": 1764180994977,
       "tag": "0006_remove_color_from_category",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1764343396726,
+      "tag": "0007_remove_type_from_transaction",
+      "breakpoints": true
     }
   ]
 }

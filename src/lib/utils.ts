@@ -23,27 +23,29 @@ export async function recalculateWalletBalance(
 
   let balance = walletData.initialBalance;
 
-  // Sum all income transactions
+  // Sum all income transactions (join with category to get type)
   const incomeResult = await db
     .select({ total: sum(transaction.amount) })
     .from(transaction)
+    .innerJoin(schema.category, eq(transaction.categoryId, schema.category.id))
     .where(
       and(
         eq(transaction.walletId, walletId),
-        eq(transaction.type, 'income')
+        eq(schema.category.type, 'income')
       )
     );
 
   const totalIncome = Number(incomeResult[0]?.total || 0);
 
-  // Sum all expense transactions
+  // Sum all expense transactions (join with category to get type)
   const expenseResult = await db
     .select({ total: sum(transaction.amount) })
     .from(transaction)
+    .innerJoin(schema.category, eq(transaction.categoryId, schema.category.id))
     .where(
       and(
         eq(transaction.walletId, walletId),
-        eq(transaction.type, 'expense')
+        eq(schema.category.type, 'expense')
       )
     );
 

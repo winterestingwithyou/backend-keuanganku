@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { eq, and, sum, sql, gte, lte } from 'drizzle-orm';
+import { eq, and, sum, gte, lte } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/d1';
 import * as schema from '../db/schema';
 import { wallet, transaction } from '../db/schema';
@@ -38,27 +38,29 @@ app.get('/monthly', async (c) => {
       const startDate = new Date(date.getFullYear(), date.getMonth(), 1);
       const endDate = new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59);
 
-      // Get income for this month
+      // Get income for this month (join with category to get type)
       const incomeResult = await db
         .select({ total: sum(transaction.amount) })
         .from(transaction)
+        .innerJoin(schema.category, eq(transaction.categoryId, schema.category.id))
         .where(
           and(
             eq(transaction.userId, firebaseUser.uid),
-            eq(transaction.type, 'income'),
+            eq(schema.category.type, 'income'),
             gte(transaction.transactionDate, startDate),
             lte(transaction.transactionDate, endDate)
           )
         );
 
-      // Get expense for this month
+      // Get expense for this month (join with category to get type)
       const expenseResult = await db
         .select({ total: sum(transaction.amount) })
         .from(transaction)
+        .innerJoin(schema.category, eq(transaction.categoryId, schema.category.id))
         .where(
           and(
             eq(transaction.userId, firebaseUser.uid),
-            eq(transaction.type, 'expense'),
+            eq(schema.category.type, 'expense'),
             gte(transaction.transactionDate, startDate),
             lte(transaction.transactionDate, endDate)
           )
@@ -100,10 +102,6 @@ app.get('/category', async (c) => {
     // Build where conditions
     const conditions = [eq(transaction.userId, firebaseUser.uid)];
 
-    if (type) {
-      conditions.push(eq(transaction.type, type));
-    }
-
     if (startDate) {
       conditions.push(gte(transaction.transactionDate, startDate));
     }
@@ -134,13 +132,19 @@ app.get('/category', async (c) => {
       const categoryKey = t.categoryId?.toString() || 'uncategorized';
       const cat = t.category as any;
       const categoryName = cat ? cat.name : 'Uncategorized';
+      const categoryType = cat ? cat.type : undefined;
+
+      // Skip if type filter is set and doesn't match category type
+      if (type && categoryType !== type) {
+        return;
+      }
 
       if (!categoryMap.has(categoryKey)) {
         categoryMap.set(categoryKey, {
           categoryId: t.categoryId,
           categoryName,
           categoryIcon: cat ? cat.icon : undefined,
-          type: t.type,
+          type: categoryType,
           totalAmount: 0,
           count: 0,
         });
@@ -177,17 +181,19 @@ app.get('/wallet', async (c) => {
 
     const walletStats = await Promise.all(
       wallets.map(async (w) => {
-        // Get income for this wallet
+        // Get income for this wallet (join with category to get type)
         const incomeResult = await db
           .select({ total: sum(transaction.amount) })
           .from(transaction)
-          .where(and(eq(transaction.walletId, w.id), eq(transaction.type, 'income')));
+          .innerJoin(schema.category, eq(transaction.categoryId, schema.category.id))
+          .where(and(eq(transaction.walletId, w.id), eq(schema.category.type, 'income')));
 
-        // Get expense for this wallet
+        // Get expense for this wallet (join with category to get type)
         const expenseResult = await db
           .select({ total: sum(transaction.amount) })
           .from(transaction)
-          .where(and(eq(transaction.walletId, w.id), eq(transaction.type, 'expense')));
+          .innerJoin(schema.category, eq(transaction.categoryId, schema.category.id))
+          .where(and(eq(transaction.walletId, w.id), eq(schema.category.type, 'expense')));
 
         const income = Number(incomeResult[0]?.total || 0);
         const expense = Number(expenseResult[0]?.total || 0);
@@ -236,27 +242,29 @@ app.get('/trends', async (c) => {
       const endDate = new Date(date);
       endDate.setHours(23, 59, 59, 999);
 
-      // Get income for this day
+      // Get income for this day (join with category to get type)
       const incomeResult = await db
         .select({ total: sum(transaction.amount) })
         .from(transaction)
+        .innerJoin(schema.category, eq(transaction.categoryId, schema.category.id))
         .where(
           and(
             eq(transaction.userId, firebaseUser.uid),
-            eq(transaction.type, 'income'),
+            eq(schema.category.type, 'income'),
             gte(transaction.transactionDate, startDate),
             lte(transaction.transactionDate, endDate)
           )
         );
 
-      // Get expense for this day
+      // Get expense for this day (join with category to get type)
       const expenseResult = await db
         .select({ total: sum(transaction.amount) })
         .from(transaction)
+        .innerJoin(schema.category, eq(transaction.categoryId, schema.category.id))
         .where(
           and(
             eq(transaction.userId, firebaseUser.uid),
-            eq(transaction.type, 'expense'),
+            eq(schema.category.type, 'expense'),
             gte(transaction.transactionDate, startDate),
             lte(transaction.transactionDate, endDate)
           )

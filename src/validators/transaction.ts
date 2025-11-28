@@ -5,10 +5,7 @@ import { z } from 'zod';
  */
 export const createTransactionSchema = z.object({
   walletId: z.number().int().positive('Wallet ID is required'),
-  categoryId: z.number().int().positive().optional(),
-  type: z.enum(['income', 'expense'], {
-    message: 'Type must be either income or expense',
-  }),
+  categoryId: z.number().int().positive('Category ID is required'),
   amount: z.number().positive('Amount must be greater than 0'),
   description: z.string().optional(),
   notes: z.string().optional(),
@@ -21,7 +18,6 @@ export const createTransactionSchema = z.object({
 export const updateTransactionSchema = z.object({
   walletId: z.number().int().positive().optional(),
   categoryId: z.number().int().positive().optional(),
-  type: z.enum(['income', 'expense']).optional(),
   amount: z.number().positive().optional(),
   description: z.string().optional(),
   notes: z.string().optional(),

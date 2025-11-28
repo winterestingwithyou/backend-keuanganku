@@ -50,9 +50,6 @@ app.get('/', zValidator('query', listTransactionQuerySchema), async (c) => {
       conditions.push(eq(transaction.walletId, query.wallet_id));
     }
 
-    if (query.type) {
-      conditions.push(eq(transaction.type, query.type));
-    }
 
     if (query.category_id) {
       conditions.push(eq(transaction.categoryId, query.category_id));
@@ -166,7 +163,6 @@ app.post('/', zValidator('json', createTransactionSchema), async (c) => {
         userId: firebaseUser.uid,
         walletId: data.walletId,
         categoryId: data.categoryId,
-        type: data.type,
         amount: data.amount,
         description: data.description,
         notes: data.notes,

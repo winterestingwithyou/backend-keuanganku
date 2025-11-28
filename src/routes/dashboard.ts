@@ -39,27 +39,29 @@ app.get('/', async (c) => {
     // 2. Calculate total balance from all active wallets
     const totalBalance = activeWallets.reduce((sum, w) => sum + w.currentBalance, 0);
 
-    // 3. Get total income
+    // 3. Get total income (join with category to get type)
     const incomeResult = await db
       .select({ total: sum(transaction.amount) })
       .from(transaction)
+      .innerJoin(schema.category, eq(transaction.categoryId, schema.category.id))
       .where(
         and(
           eq(transaction.userId, firebaseUser.uid),
-          eq(transaction.type, 'income')
+          eq(schema.category.type, 'income')
         )
       );
 
     const totalIncome = Number(incomeResult[0]?.total || 0);
 
-    // 4. Get total expense
+    // 4. Get total expense (join with category to get type)
     const expenseResult = await db
       .select({ total: sum(transaction.amount) })
       .from(transaction)
+      .innerJoin(schema.category, eq(transaction.categoryId, schema.category.id))
       .where(
         and(
           eq(transaction.userId, firebaseUser.uid),
-          eq(transaction.type, 'expense')
+          eq(schema.category.type, 'expense')
         )
       );
 

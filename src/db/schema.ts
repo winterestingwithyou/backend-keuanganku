@@ -57,7 +57,6 @@ export const transaction = sqliteTable('transaction', {
     .references(() => wallet.id, { onDelete: 'cascade' }),
   categoryId: integer('category_id')
     .references(() => category.id, { onDelete: 'set null' }),
-  type: text('type', { enum: ['income', 'expense'] }).notNull(),
   amount: real('amount').notNull(), // harus > 0, validasi di application layer
   description: text('description'),
   notes: text('notes'),
@@ -73,7 +72,6 @@ export const transaction = sqliteTable('transaction', {
   index('idx_transaction_user_id').on(table.userId),
   index('idx_transaction_wallet_id').on(table.walletId),
   index('idx_transaction_date').on(table.userId, table.transactionDate),
-  index('idx_transaction_type').on(table.userId, table.type),
   index('idx_transaction_category').on(table.categoryId),
 ]);
 
