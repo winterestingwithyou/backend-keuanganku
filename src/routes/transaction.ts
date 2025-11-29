@@ -215,6 +215,7 @@ app.get('/:id', async (c) => {
             id: true,
             name: true,
             icon: true,
+            type: true,
           },
         },
       },
