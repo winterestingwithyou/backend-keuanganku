@@ -150,10 +150,17 @@ app.post('/', zValidator('json', createTransactionSchema), async (c) => {
     const db = drizzle(c.env.DB, { schema });
     const data = c.req.valid('json');
 
-    // Validate wallet ownership
-    const isOwner = await validateWalletOwnership(db, data.walletId, firebaseUser.uid);
-    if (!isOwner) {
+    // Validate wallet ownership and active status
+    const walletData = await db.query.wallet.findFirst({
+      where: and(eq(wallet.id, data.walletId), eq(wallet.userId, firebaseUser.uid)),
+    });
+
+    if (!walletData) {
       return c.json(errorResponse('NOT_FOUND', 'Wallet not found'), 404);
+    }
+
+    if (!walletData.isActive) {
+      return c.json(errorResponse('VALIDATION_ERROR', 'Cannot add transaction to inactive wallet'), 400);
     }
 
     // Create transaction
