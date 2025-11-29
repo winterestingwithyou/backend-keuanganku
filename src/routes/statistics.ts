@@ -21,7 +21,7 @@ app.use('*', requireFirebaseAuth);
 
 /**
  * GET /api/statistics/monthly - Get monthly income vs expense statistics
- * Query params: year (default current year), months (default current month)
+ * Query params: year (default current year), months (default 6)
  */
 app.get('/monthly', async (c) => {
   try {
@@ -29,7 +29,7 @@ app.get('/monthly', async (c) => {
     const db = drizzle(c.env.DB, { schema });
 
     const year = parseInt(c.req.query('year') || new Date().getFullYear().toString());
-    const monthsCount = parseInt(c.req.query('months') || new Date().getMonth().toString() );
+    const monthsCount = parseInt(c.req.query('months') || '6');
 
     const monthlyStats = [];
 
