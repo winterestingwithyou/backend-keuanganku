@@ -134,6 +134,21 @@ export function formatCurrency(amount: number, currency: string = 'IDR'): string
 }
 
 /**
+ * Format date to readable format (e.g., "19 Nov 2025")
+ */
+export function formatDate(date: string | Date): string {
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+  
+  const day = dateObj.getDate();
+  const month = months[dateObj.getMonth()];
+  const year = dateObj.getFullYear();
+  
+  return `${day} ${month} ${year}`;
+}
+
+/**
  * Validate transfer between wallets
  */
 export async function validateTransfer(

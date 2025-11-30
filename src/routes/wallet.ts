@@ -6,7 +6,7 @@ import * as schema from '../db/schema';
 import { wallet } from '../db/schema';
 import { requireFirebaseAuth } from '../lib/firebase/middleware';
 import { createWalletSchema, updateWalletSchema, reorderWalletSchema } from '../validators/wallet';
-import { errorResponse, successResponse, validateWalletOwnership } from '../lib/utils';
+import { errorResponse, successResponse, validateWalletOwnership, formatDate } from '../lib/utils';
 import { FirebaseUser } from '../db/types';
 
 type AppContext = {
@@ -160,6 +160,12 @@ app.get('/:id', async (c) => {
       },
     });
 
+    // Format transaction dates
+    const formattedTransactions = recentTransactions.map((t) => ({
+      ...t,
+      transactionDate: formatDate(t.transactionDate),
+    }));
+
     return c.json(
       successResponse({
         wallet: {
@@ -175,7 +181,7 @@ app.get('/:id', async (c) => {
           totalExpense,
           netIncome: totalIncome - totalExpense,
         },
-        recentTransactions,
+        recentTransactions: formattedTransactions,
       })
     );
   } catch (error) {

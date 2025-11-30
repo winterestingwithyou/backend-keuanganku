@@ -4,7 +4,7 @@ import { drizzle } from 'drizzle-orm/d1';
 import * as schema from '../db/schema';
 import { wallet, transaction } from '../db/schema';
 import { requireFirebaseAuth } from '../lib/firebase/middleware';
-import { errorResponse, successResponse } from '../lib/utils';
+import { errorResponse, successResponse, formatDate } from '../lib/utils';
 import { FirebaseUser } from '../db/types';
 
 type AppContext = {
@@ -100,6 +100,12 @@ app.get('/', async (c) => {
       displayOrder: w.displayOrder,
     }));
 
+    // Format transaction dates
+    const formattedTransactions = recentTransactions.map((t) => ({
+      ...t,
+      transactionDate: formatDate(t.transactionDate),
+    }));
+
     return c.json(
       successResponse({
         summary: {
@@ -109,7 +115,7 @@ app.get('/', async (c) => {
           netIncome: totalIncome - totalExpense,
         },
         wallets: walletSummary,
-        recentTransactions,
+        recentTransactions: formattedTransactions,
       })
     );
   } catch (error) {

@@ -17,6 +17,7 @@ import {
   updateWalletBalance,
   getPaginationParams,
   paginationMeta,
+  formatDate,
 } from '../lib/utils';
 import { FirebaseUser } from '../db/types';
 
@@ -95,8 +96,14 @@ app.get('/', zValidator('query', listTransactionQuerySchema), async (c) => {
 
     const total = totalResult[0]?.count || 0;
 
+    // Format transaction dates
+    const formattedTransactions = transactions.map((t) => ({
+      ...t,
+      transactionDate: formatDate(t.transactionDate),
+    }));
+
     return c.json(
-      successResponse(transactions, paginationMeta(query.page, query.limit, total))
+      successResponse(formattedTransactions, paginationMeta(query.page, query.limit, total))
     );
   } catch (error) {
     console.error('Error fetching transactions:', error);
@@ -134,7 +141,13 @@ app.get('/recent', async (c) => {
       },
     });
 
-    return c.json(successResponse(transactions));
+    // Format transaction dates
+    const formattedTransactions = transactions.map((t) => ({
+      ...t,
+      transactionDate: formatDate(t.transactionDate),
+    }));
+
+    return c.json(successResponse(formattedTransactions));
   } catch (error) {
     console.error('Error fetching recent transactions:', error);
     return c.json(errorResponse('INTERNAL_ERROR', 'Failed to fetch recent transactions'), 500);
@@ -225,7 +238,13 @@ app.get('/:id', async (c) => {
       return c.json(errorResponse('NOT_FOUND', 'Transaction not found'), 404);
     }
 
-    return c.json(successResponse(transactionData));
+    // Format transaction date
+    const formattedTransaction = {
+      ...transactionData,
+      transactionDate: formatDate(transactionData.transactionDate),
+    };
+
+    return c.json(successResponse(formattedTransaction));
   } catch (error) {
     console.error('Error fetching transaction:', error);
     return c.json(errorResponse('INTERNAL_ERROR', 'Failed to fetch transaction'), 500);
