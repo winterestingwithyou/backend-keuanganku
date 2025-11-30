@@ -167,6 +167,69 @@ app.get('/category', async (c) => {
 });
 
 /**
+ * GET /api/statistics/by-category - Get total income/expense grouped by category
+ * Query params: type (income|expense, default: expense)
+ */
+app.get('/by-category', async (c) => {
+  try {
+    const firebaseUser = c.get('firebaseUser');
+    const db = drizzle(c.env.DB, { schema });
+
+    const type = (c.req.query('type') || 'expense') as 'income' | 'expense';
+
+    // Get all transactions grouped by category with the specified type
+    const result = await db
+      .select({
+        categoryId: schema.category.id,
+        categoryName: schema.category.name,
+        categoryIcon: schema.category.icon,
+        totalAmount: sum(transaction.amount),
+      })
+      .from(transaction)
+      .innerJoin(schema.category, eq(transaction.categoryId, schema.category.id))
+      .where(
+        and(
+          eq(transaction.userId, firebaseUser.uid),
+          eq(schema.category.type, type)
+        )
+      )
+      .groupBy(schema.category.id, schema.category.name, schema.category.icon)
+      .orderBy(sum(transaction.amount));
+
+    // Format and sort by total amount (descending)
+    const categoryData = result
+      .map((item) => ({
+        categoryId: item.categoryId,
+        categoryName: item.categoryName,
+        categoryIcon: item.categoryIcon,
+        totalAmount: Number(item.totalAmount || 0),
+        type,
+      }))
+      .sort((a, b) => b.totalAmount - a.totalAmount);
+
+    // Calculate total for percentage
+    const grandTotal = categoryData.reduce((sum, item) => sum + item.totalAmount, 0);
+
+    // Add percentage to each category
+    const categoryDataWithPercentage = categoryData.map((item) => ({
+      ...item,
+      percentage: grandTotal > 0 ? Math.round((item.totalAmount / grandTotal) * 100 * 100) / 100 : 0,
+    }));
+
+    return c.json(
+      successResponse({
+        type,
+        totalAmount: grandTotal,
+        categories: categoryDataWithPercentage,
+      })
+    );
+  } catch (error) {
+    console.error('Error fetching by-category statistics:', error);
+    return c.json(errorResponse('INTERNAL_ERROR', 'Failed to fetch by-category statistics'), 500);
+  }
+});
+
+/**
  * GET /api/statistics/wallet - Get balance and summary per wallet
  */
 app.get('/wallet', async (c) => {
