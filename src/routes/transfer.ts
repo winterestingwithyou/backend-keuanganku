@@ -12,6 +12,7 @@ import {
   validateTransfer,
   getPaginationParams,
   paginationMeta,
+  formatDate,
 } from '../lib/utils';
 import { FirebaseUser } from '../db/types';
 
@@ -91,7 +92,13 @@ app.get('/', zValidator('query', listTransferQuerySchema), async (c) => {
 
     const total = totalResult[0]?.count || 0;
 
-    return c.json(successResponse(transfers, paginationMeta(query.page, query.limit, total)));
+    // Format transfer dates
+    const formattedTransfers = transfers.map((t) => ({
+      ...t,
+      transferDate: formatDate(t.transferDate),
+    }));
+
+    return c.json(successResponse(formattedTransfers, paginationMeta(query.page, query.limit, total)));
   } catch (error) {
     console.error('Error fetching transfers:', error);
     return c.json(errorResponse('INTERNAL_ERROR', 'Failed to fetch transfers'), 500);
@@ -206,7 +213,13 @@ app.get('/:id', async (c) => {
       return c.json(errorResponse('NOT_FOUND', 'Transfer not found'), 404);
     }
 
-    return c.json(successResponse(transferData));
+    // Format transfer date
+    const formattedTransfer = {
+      ...transferData,
+      transferDate: formatDate(transferData.transferDate),
+    };
+
+    return c.json(successResponse(formattedTransfer));
   } catch (error) {
     console.error('Error fetching transfer:', error);
     return c.json(errorResponse('INTERNAL_ERROR', 'Failed to fetch transfer'), 500);
