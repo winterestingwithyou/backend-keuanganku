@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, and, desc, sum } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/d1';
 import * as schema from '../db/schema';
 import { wallet } from '../db/schema';
@@ -87,7 +87,7 @@ app.post('/', zValidator('json', createWalletSchema), async (c) => {
 });
 
 /**
- * GET /api/wallet/:id - Get wallet detail
+ * GET /api/wallet/:id - Get wallet detail with transactions summary
  */
 app.get('/:id', async (c) => {
   try {
@@ -110,7 +110,74 @@ app.get('/:id', async (c) => {
       return c.json(errorResponse('NOT_FOUND', 'Wallet not found'), 404);
     }
 
-    return c.json(successResponse(walletData));
+    // Get total income for this wallet (join with category to get type)
+    const incomeResult = await db
+      .select({ total: sum(schema.transaction.amount) })
+      .from(schema.transaction)
+      .innerJoin(schema.category, eq(schema.transaction.categoryId, schema.category.id))
+      .where(
+        and(
+          eq(schema.transaction.userId, firebaseUser.uid),
+          eq(schema.transaction.walletId, walletId),
+          eq(schema.category.type, 'income')
+        )
+      );
+
+    const totalIncome = Number(incomeResult[0]?.total || 0);
+
+    // Get total expense for this wallet (join with category to get type)
+    const expenseResult = await db
+      .select({ total: sum(schema.transaction.amount) })
+      .from(schema.transaction)
+      .innerJoin(schema.category, eq(schema.transaction.categoryId, schema.category.id))
+      .where(
+        and(
+          eq(schema.transaction.userId, firebaseUser.uid),
+          eq(schema.transaction.walletId, walletId),
+          eq(schema.category.type, 'expense')
+        )
+      );
+
+    const totalExpense = Number(expenseResult[0]?.total || 0);
+
+    // Get recent transactions for this wallet (last 10)
+    const recentTransactions = await db.query.transaction.findMany({
+      where: and(
+        eq(schema.transaction.userId, firebaseUser.uid),
+        eq(schema.transaction.walletId, walletId)
+      ),
+      orderBy: [desc(schema.transaction.transactionDate), desc(schema.transaction.createdAt)],
+      limit: 10,
+      with: {
+        category: {
+          columns: {
+            id: true,
+            name: true,
+            icon: true,
+            type: true,
+          },
+        },
+      },
+    });
+
+    return c.json(
+      successResponse({
+        wallet: {
+          id: walletData.id,
+          name: walletData.name,
+          color: walletData.color,
+          currentBalance: walletData.currentBalance,
+          initialBalance: walletData.initialBalance,
+          displayOrder: walletData.displayOrder,
+        },
+        summary: {
+          totalIncome,
+          totalExpense,
+          netIncome: totalIncome - totalExpense,
+        },
+        recentTransactions,
+      })
+    );
   } catch (error) {
     console.error('Error fetching wallet:', error);
     return c.json(errorResponse('INTERNAL_ERROR', 'Failed to fetch wallet'), 500);
